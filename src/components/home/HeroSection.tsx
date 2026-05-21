@@ -6,6 +6,8 @@ import type { Lang, Project, Certificate } from "@/types";
 import { CATEGORY_LABELS } from "@/types";
 import { t } from "@/lib/i18n/strings";
 import Link from "next/link";
+import ResumeModal from "@/components/shared/ResumeModal";
+import ContactModal from "@/components/shared/ContactModal";
 
 interface Props {
   lang: Lang;
@@ -94,26 +96,29 @@ function HScroll({ children }: { children: React.ReactNode }) {
 const contactRows = [
   { icon: Mail,      labelKey: "contact_email"    as const, value: "tiwsuphawit@gmail.com" },
   { icon: Phone,     labelKey: "contact_phone"    as const, value: "+66 99-034-1134" },
-  { icon: GitBranch, labelKey: "contact_github"   as const, value: "https://github.com/Flame-Bannawit" },
+  { icon: GitBranch, labelKey: "contact_github"   as const, value: "github.com/Flame-Bannawit" },
   { icon: MapPin,    labelKey: "contact_location" as const, value: null },
 ];
 
 const OTHER_WORKS = [
-  { kind: "Hardware",     title: "Arduino smart lock prototype",      icon: "⚙️" },
-  { kind: "Automation",   title: "Notion + Slack daily standup bot",  icon: "⚡" },
+  { kind: "Hardware",     title: "Arduino smart lock prototype",       icon: "⚙️" },
+  { kind: "Automation",   title: "Notion + Slack daily standup bot",   icon: "⚡" },
   { kind: "Data Analyst", title: "E-commerce funnel analysis (Python)", icon: "📈" },
-  { kind: "Hardware",     title: "ESP32 air-quality dashboard",        icon: "⚙️" },
-  { kind: "Automation",   title: "Make.com invoice pipeline",          icon: "⚡" },
-  { kind: "Data Analyst", title: "Customer churn model (sklearn)",     icon: "📈" },
-  { kind: "Hardware",     title: "Arduino smart lock prototype",      icon: "⚙️" },
-  { kind: "Automation",   title: "Notion + Slack daily standup bot",  icon: "⚡" },
+  { kind: "Hardware",     title: "ESP32 air-quality dashboard",         icon: "⚙️" },
+  { kind: "Automation",   title: "Make.com invoice pipeline",           icon: "⚡" },
+  { kind: "Data Analyst", title: "Customer churn model (sklearn)",      icon: "📈" },
+  { kind: "Hardware",     title: "Arduino smart lock prototype",       icon: "⚙️" },
+  { kind: "Automation",   title: "Notion + Slack daily standup bot",   icon: "⚡" },
   { kind: "Data Analyst", title: "E-commerce funnel analysis (Python)", icon: "📈" },
-  { kind: "Hardware",     title: "ESP32 air-quality dashboard",        icon: "⚙️" },
-  { kind: "Automation",   title: "Make.com invoice pipeline",          icon: "⚡" },
-  { kind: "Data Analyst", title: "Customer churn model (sklearn)",     icon: "📈" },
+  { kind: "Hardware",     title: "ESP32 air-quality dashboard",         icon: "⚙️" },
+  { kind: "Automation",   title: "Make.com invoice pipeline",           icon: "⚡" },
+  { kind: "Data Analyst", title: "Customer churn model (sklearn)",      icon: "📈" },
 ];
 
 export default function HeroSection({ lang, projects = [], certs = [] }: Props) {
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+
   return (
     <>
       {/* ── HERO ── */}
@@ -208,16 +213,17 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
                 </div>
               </Reveal>
 
+              {/* CTA Buttons */}
               <Reveal delay={240}>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                   <Link href="/projects" className="btn btn-primary">
                     {t(lang, "cta_view_detail")}
                     <ArrowUpRight size={16} />
                   </Link>
-                  <a href="/resume.pdf" download className="btn btn-ghost">
+                  <button onClick={() => setResumeOpen(true)} className="btn btn-ghost">
                     <Download size={16} />
                     {t(lang, "cta_resume")}
-                  </a>
+                  </button>
                 </div>
               </Reveal>
             </div>
@@ -261,9 +267,7 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
                   fontFamily: "var(--font-mono)", fontSize: 11,
                   color: "var(--primary)", letterSpacing: "0.16em",
                   textTransform: "uppercase", margin: "0 0 8px",
-                }}>
-                  01 · WORK
-                </p>
+                }}>01 · WORK</p>
                 <h2 style={{
                   fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700,
                   letterSpacing: "-0.03em", margin: "0 0 8px",
@@ -287,12 +291,9 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               </Link>
             </div>
           </Reveal>
-
           {projects.length > 0 ? (
             <HScroll>
-              {projects.map(p => (
-                <ProjectHCard key={p.id} project={p} lang={lang} />
-              ))}
+              {projects.map(p => <ProjectHCard key={p.id} project={p} lang={lang} />)}
             </HScroll>
           ) : (
             <p style={{ color: "var(--muted)", fontSize: 14 }}>{t(lang, "no_projects")}</p>
@@ -313,9 +314,7 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
                   fontFamily: "var(--font-mono)", fontSize: 11,
                   color: "var(--primary)", letterSpacing: "0.16em",
                   textTransform: "uppercase", margin: "0 0 8px",
-                }}>
-                  02 · CERTIFICATES
-                </p>
+                }}>02 · CERTIFICATES</p>
                 <h2 style={{
                   fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700,
                   letterSpacing: "-0.03em", margin: "0 0 8px",
@@ -339,12 +338,9 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               </Link>
             </div>
           </Reveal>
-
           {certs.length > 0 ? (
             <HScroll>
-              {certs.map(c => (
-                <CertHCard key={c.id} cert={c} lang={lang} />
-              ))}
+              {certs.map(c => <CertHCard key={c.id} cert={c} lang={lang} />)}
             </HScroll>
           ) : (
             <p style={{ color: "var(--muted)", fontSize: 14 }}>{t(lang, "no_certs")}</p>
@@ -360,9 +356,7 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               fontFamily: "var(--font-mono)", fontSize: 11,
               color: "var(--primary)", letterSpacing: "0.16em",
               textTransform: "uppercase", margin: "0 0 8px",
-            }}>
-              03 · BEYOND THE WEB
-            </p>
+            }}>03 · BEYOND THE WEB</p>
             <h2 style={{
               fontSize: "clamp(34px, 4vw, 52px)", fontWeight: 700,
               letterSpacing: "-0.03em", margin: "0 0 8px",
@@ -373,7 +367,6 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               {t(lang, "section_other_sub")}
             </p>
           </Reveal>
-
           <div className="marquee">
             <div className="marquee-track">
               {OTHER_WORKS.map((w, i) => (
@@ -388,9 +381,7 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
                     background: "var(--surface-2)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 18, flexShrink: 0,
-                  }}>
-                    {w.icon}
-                  </div>
+                  }}>{w.icon}</div>
                   <div>
                     <p style={{
                       fontFamily: "var(--font-mono)", fontSize: 10,
@@ -418,9 +409,7 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               fontFamily: "var(--font-mono)", fontSize: 11,
               color: "var(--primary)", letterSpacing: "0.2em",
               textTransform: "uppercase", margin: "0 0 16px",
-            }}>
-              LET'S BUILD
-            </p>
+            }}>LET'S BUILD</p>
             <h2 style={{
               fontSize: "clamp(36px, 5vw, 64px)", fontWeight: 700,
               letterSpacing: "-0.03em", margin: "0 0 16px",
@@ -431,9 +420,9 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
               เปิดรับโอกาสงานเต็มเวลา ฝึกงาน หรือฟรีแลนซ์ ติดต่อมาได้เลยครับ
             </p>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="mailto:tiwsuphawit@gmail.com" className="btn btn-primary">
+              <button onClick={() => setContactOpen(true)} className="btn btn-primary">
                 <Mail size={16} /> ติดต่อผม
-              </a>
+              </button>
               <a href="https://github.com/Flame-Bannawit" target="_blank" rel="noopener noreferrer"
                 className="btn btn-ghost">
                 <GitBranch size={16} /> GitHub
@@ -458,6 +447,10 @@ export default function HeroSection({ lang, projects = [], certs = [] }: Props) 
         </span>
       </footer>
 
+      {/* ── MODALS ── */}
+      <ResumeModal open={resumeOpen} onClose={() => setResumeOpen(false)} lang={lang} />
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} lang={lang} />
+
       <style>{`
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
@@ -479,7 +472,10 @@ function ProjectCarousel({ items, lang }: { items: Project[]; lang: Lang }) {
     timerRef.current = setInterval(() => setIdx(i => (i + 1) % items.length), 5000);
   };
 
-  useEffect(() => { resetTimer(); return () => { if (timerRef.current) clearInterval(timerRef.current); }; }, [items.length]);
+  useEffect(() => {
+    resetTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [items.length]);
 
   const onPrev = () => { setIdx(i => (i - 1 + items.length) % items.length); resetTimer(); };
   const onNext = () => { setIdx(i => (i + 1) % items.length); resetTimer(); };
@@ -498,22 +494,21 @@ function ProjectCarousel({ items, lang }: { items: Project[]; lang: Lang }) {
           const isActive = pos === 0;
           const desc = lang === "th" ? item.description_th : (item.description_en || item.description_th);
           return (
-            <Link key={item.id} href={`/projects/${item.slug}`}
-              style={{
-                position: "absolute", top: "50%", left: "50%",
-                width: 380, height: 480, marginLeft: -190, marginTop: -240,
-                borderRadius: "var(--radius-lg)",
-                background: "var(--surface)",
-                border: `1px solid ${isActive ? "var(--primary)" : "var(--line)"}`,
-                boxShadow: "var(--shadow-lift)", overflow: "hidden",
-                transform: `translateX(${pos * 96 + dragX * 0.3}px) translateZ(${-Math.abs(pos) * 140}px) rotateY(${-pos * 28}deg)`,
-                opacity: Math.abs(pos) > 2 ? 0 : 1,
-                filter: `brightness(${pos === 0 ? 1 : 1 - Math.abs(pos) * 0.18})`,
-                zIndex: items.length - Math.abs(pos),
-                transition: "transform .9s var(--ease-out), opacity .9s var(--ease-out), filter .9s var(--ease-out)",
-                cursor: isActive ? "pointer" : "grab",
-                textDecoration: "none", display: "block",
-              }}>
+            <Link key={item.id} href={`/projects/${item.slug}`} style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: 380, height: 480, marginLeft: -190, marginTop: -240,
+              borderRadius: "var(--radius-lg)",
+              background: "var(--surface)",
+              border: `1px solid ${isActive ? "var(--primary)" : "var(--line)"}`,
+              boxShadow: "var(--shadow-lift)", overflow: "hidden",
+              transform: `translateX(${pos * 96 + dragX * 0.3}px) translateZ(${-Math.abs(pos) * 140}px) rotateY(${-pos * 28}deg)`,
+              opacity: Math.abs(pos) > 2 ? 0 : 1,
+              filter: `brightness(${pos === 0 ? 1 : 1 - Math.abs(pos) * 0.18})`,
+              zIndex: items.length - Math.abs(pos),
+              transition: "transform .9s var(--ease-out), opacity .9s var(--ease-out), filter .9s var(--ease-out)",
+              cursor: isActive ? "pointer" : "grab",
+              textDecoration: "none", display: "block",
+            }}>
               <div style={{ height: 280, background: "var(--surface-2)", position: "relative", overflow: "hidden" }}>
                 {item.cover_url
                   ? <img src={item.cover_url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -539,8 +534,8 @@ function ProjectCarousel({ items, lang }: { items: Project[]; lang: Lang }) {
                   {desc}
                 </p>
                 <div style={{ display: "flex", gap: 6, marginTop: 14, flexWrap: "wrap" }}>
-                  {item.project_tech?.slice(0, 3).map(t => (
-                    <span key={t.id} className="chip">{t.tech_name}</span>
+                  {item.project_tech?.slice(0, 3).map(tech => (
+                    <span key={tech.id} className="chip">{tech.tech_name}</span>
                   ))}
                 </div>
               </div>
@@ -549,7 +544,6 @@ function ProjectCarousel({ items, lang }: { items: Project[]; lang: Lang }) {
         })}
       </div>
 
-      {/* Controls */}
       <div style={{
         position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)",
         display: "flex", alignItems: "center", gap: 12, zIndex: 10,
@@ -578,7 +572,6 @@ function ProjectCarousel({ items, lang }: { items: Project[]; lang: Lang }) {
   );
 }
 
-// ── Project HScroll Card ──────────────────────────────
 function ProjectHCard({ project, lang }: { project: Project; lang: Lang }) {
   const desc = lang === "th" ? project.description_th : (project.description_en || project.description_th);
   return (
@@ -617,7 +610,6 @@ function ProjectHCard({ project, lang }: { project: Project; lang: Lang }) {
   );
 }
 
-// ── Cert HScroll Card ─────────────────────────────────
 function CertHCard({ cert, lang }: { cert: Certificate; lang: Lang }) {
   return (
     <div style={{
