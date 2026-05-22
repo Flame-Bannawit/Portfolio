@@ -12,6 +12,7 @@ import type { Project, Certificate } from "@/types";
 import { CATEGORY_LABELS } from "@/types";
 import ProjectForm from "@/components/admin/ProjectForm";
 import CertForm from "@/components/admin/CertForm";
+import SortableProjectList from "@/components/admin/SortableProjectList";
 
 type AdminPage = "dashboard" | "add-project" | "add-cert" | "edit";
 
@@ -189,7 +190,7 @@ function EditView({ projects, certs, onRefresh }: {
   certs: Certificate[];
   onRefresh: () => void;
 }) {
-  const [tab, setTab]                       = useState<"projects" | "certs">("projects");
+  const [tab, setTab]                       = useState<"projects" | "certs" | "order">("projects");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [editingCert, setEditingCert]       = useState<Certificate | null>(null);
 
@@ -276,8 +277,9 @@ function EditView({ projects, certs, onRefresh }: {
     <div>
       <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 24px" }}>แก้ไขข้อมูล</h2>
 
+      {/* Tabs */}
       <div style={{ display: "flex", gap: 0, marginBottom: 24 }}>
-        {(["projects", "certs"] as const).map((t) => (
+        {(["projects", "certs", "order"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: "8px 20px", border: "1px solid var(--line)",
             background: tab === t ? "var(--primary)" : "var(--surface)",
@@ -285,92 +287,130 @@ function EditView({ projects, certs, onRefresh }: {
             fontWeight: 600, fontSize: 13, cursor: "pointer",
             borderRadius: t === "projects"
               ? "var(--radius-sm) 0 0 var(--radius-sm)"
-              : "0 var(--radius-sm) var(--radius-sm) 0",
+              : t === "order"
+              ? "0 var(--radius-sm) var(--radius-sm) 0"
+              : "0",
           }}>
-            {t === "projects" ? `Projects (${projects.length})` : `Certificates (${certs.length})`}
+            {t === "projects" ? `Projects (${projects.length})`
+              : t === "certs" ? `Certificates (${certs.length})`
+              : "🔀 จัดลำดับ"}
           </button>
         ))}
       </div>
 
-      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-          <thead>
-            <tr>
-              {tab === "projects" ? (
-                <><th style={thStyle}>ชื่อ</th><th style={thStyle}>Category</th><th style={thStyle}>ช่วงเวลา</th><th style={thStyle}>Status</th><th style={thStyle}>Action</th></>
-              ) : (
-                <><th style={thStyle}>ชื่อ</th><th style={thStyle}>ออกโดย</th><th style={thStyle}>วันที่</th><th style={thStyle}>Action</th></>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {tab === "projects" && projects.map((p) => (
-              <tr key={p.id} style={{ borderTop: "1px solid var(--line-soft)" }}>
-                <td style={tdStyle}>{p.name}</td>
-                <td style={tdStyle}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--primary)", letterSpacing: "0.08em" }}>
-                    {CATEGORY_LABELS[p.category].en}
-                  </span>
-                </td>
-                <td style={{ ...tdStyle, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>
-                  {p.period_start} — {p.period_end}
-                </td>
-                <td style={tdStyle}>
-                  <span className={`tag-pill ${p.is_published ? "live" : "draft"}`}>
-                    {p.is_published ? "Live" : "Draft"}
-                  </span>
-                </td>
-                <td style={tdStyle}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => setEditingProject(p)} style={{
-                      padding: "5px 12px", borderRadius: "var(--radius-xs)",
-                      background: "color-mix(in oklab, var(--primary) 12%, var(--surface))",
-                      color: "var(--primary)",
-                      border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)",
-                      fontSize: 12, cursor: "pointer", fontWeight: 600,
-                    }}>แก้ไข</button>
-                    <button onClick={() => handleDeleteProject(p.id)} style={{
-                      padding: "5px 12px", borderRadius: "var(--radius-xs)",
-                      background: "color-mix(in oklab, var(--accent) 12%, var(--surface))",
-                      color: "var(--accent)",
-                      border: "1px solid color-mix(in oklab, var(--accent) 30%, transparent)",
-                      fontSize: 12, cursor: "pointer", fontWeight: 600,
-                    }}>ลบ</button>
-                  </div>
-                </td>
+      {/* Projects table */}
+      {tab === "projects" && (
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>ชื่อ</th>
+                <th style={thStyle}>Category</th>
+                <th style={thStyle}>ช่วงเวลา</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Action</th>
               </tr>
-            ))}
-            {tab === "certs" && certs.map((c) => (
-              <tr key={c.id} style={{ borderTop: "1px solid var(--line-soft)" }}>
-                <td style={tdStyle}>{c.name}</td>
-                <td style={{ ...tdStyle, color: "var(--muted)", fontSize: 13 }}>{c.issuer}</td>
-                <td style={{ ...tdStyle, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>{c.issued_date}</td>
-                <td style={tdStyle}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => setEditingCert(c)} style={{
-                      padding: "5px 12px", borderRadius: "var(--radius-xs)",
-                      background: "color-mix(in oklab, var(--primary) 12%, var(--surface))",
-                      color: "var(--primary)",
-                      border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)",
-                      fontSize: 12, cursor: "pointer", fontWeight: 600,
-                    }}>แก้ไข</button>
-                    <button onClick={() => handleDeleteCert(c.id)} style={{
-                      padding: "5px 12px", borderRadius: "var(--radius-xs)",
-                      background: "color-mix(in oklab, var(--accent) 12%, var(--surface))",
-                      color: "var(--accent)",
-                      border: "1px solid color-mix(in oklab, var(--accent) 30%, transparent)",
-                      fontSize: 12, cursor: "pointer", fontWeight: 600,
-                    }}>ลบ</button>
-                  </div>
-                </td>
+            </thead>
+            <tbody>
+              {projects.map((p) => (
+                <tr key={p.id} style={{ borderTop: "1px solid var(--line-soft)" }}>
+                  <td style={tdStyle}>{p.name}</td>
+                  <td style={tdStyle}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--primary)", letterSpacing: "0.08em" }}>
+                      {CATEGORY_LABELS[p.category].en}
+                    </span>
+                  </td>
+                  <td style={{ ...tdStyle, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>
+                    {p.period_start} — {p.period_end}
+                  </td>
+                  <td style={tdStyle}>
+                    <span className={`tag-pill ${p.is_published ? "live" : "draft"}`}>
+                      {p.is_published ? "Live" : "Draft"}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => setEditingProject(p)} style={{
+                        padding: "5px 12px", borderRadius: "var(--radius-xs)",
+                        background: "color-mix(in oklab, var(--primary) 12%, var(--surface))",
+                        color: "var(--primary)",
+                        border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)",
+                        fontSize: 12, cursor: "pointer", fontWeight: 600,
+                      }}>แก้ไข</button>
+                      <button onClick={() => handleDeleteProject(p.id)} style={{
+                        padding: "5px 12px", borderRadius: "var(--radius-xs)",
+                        background: "color-mix(in oklab, var(--accent) 12%, var(--surface))",
+                        color: "var(--accent)",
+                        border: "1px solid color-mix(in oklab, var(--accent) 30%, transparent)",
+                        fontSize: 12, cursor: "pointer", fontWeight: 600,
+                      }}>ลบ</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {projects.length === 0 && (
+            <div style={{ padding: 32, textAlign: "center", color: "var(--muted)", fontSize: 14 }}>ยังไม่มีข้อมูล</div>
+          )}
+        </div>
+      )}
+
+      {/* Certs table */}
+      {tab === "certs" && (
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>ชื่อ</th>
+                <th style={thStyle}>ออกโดย</th>
+                <th style={thStyle}>วันที่</th>
+                <th style={thStyle}>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {((tab === "projects" && projects.length === 0) || (tab === "certs" && certs.length === 0)) && (
-          <div style={{ padding: 32, textAlign: "center", color: "var(--muted)", fontSize: 14 }}>ยังไม่มีข้อมูล</div>
-        )}
-      </div>
+            </thead>
+            <tbody>
+              {certs.map((c) => (
+                <tr key={c.id} style={{ borderTop: "1px solid var(--line-soft)" }}>
+                  <td style={tdStyle}>{c.name}</td>
+                  <td style={{ ...tdStyle, color: "var(--muted)", fontSize: 13 }}>{c.issuer}</td>
+                  <td style={{ ...tdStyle, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>{c.issued_date}</td>
+                  <td style={tdStyle}>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => setEditingCert(c)} style={{
+                        padding: "5px 12px", borderRadius: "var(--radius-xs)",
+                        background: "color-mix(in oklab, var(--primary) 12%, var(--surface))",
+                        color: "var(--primary)",
+                        border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)",
+                        fontSize: 12, cursor: "pointer", fontWeight: 600,
+                      }}>แก้ไข</button>
+                      <button onClick={() => handleDeleteCert(c.id)} style={{
+                        padding: "5px 12px", borderRadius: "var(--radius-xs)",
+                        background: "color-mix(in oklab, var(--accent) 12%, var(--surface))",
+                        color: "var(--accent)",
+                        border: "1px solid color-mix(in oklab, var(--accent) 30%, transparent)",
+                        fontSize: 12, cursor: "pointer", fontWeight: 600,
+                      }}>ลบ</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {certs.length === 0 && (
+            <div style={{ padding: 32, textAlign: "center", color: "var(--muted)", fontSize: 14 }}>ยังไม่มีข้อมูล</div>
+          )}
+        </div>
+      )}
+
+      {/* Order tab */}
+      {tab === "order" && (
+        <div style={{
+          background: "var(--surface)", border: "1px solid var(--line)",
+          borderRadius: "var(--radius-md)", padding: 24,
+        }}>
+          <SortableProjectList projects={projects} onSaved={onRefresh} />
+        </div>
+      )}
     </div>
   );
 }
